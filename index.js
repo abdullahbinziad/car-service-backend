@@ -17,7 +17,7 @@ mongoose.set("strictQuery", true);
 //file upload
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-      cb(null, 'uploads/')
+      cb(null, 'uploads')
     },
     filename: function (req, file, cb) {
      const name = Date.now()+"-"+ file.originalname ;
@@ -84,13 +84,14 @@ app.get('/services', async (req,res)=>{
 //post service 
 app.post("/services",upload.single('image'), async (req,res) =>{
     try {
+        console.log(req.file)
         const newService = new Service({
             title: req.body.title,
             price: req.body.price,
             description:req.body.description,
             image: {
-                data: req.file.path,
-                contentType:'image/png'
+               data: fs.readFileSync(path.join(__dirname + '/uploads/' + req.file.filename)),
+            contentType: 'image/png'
             }
             
         });
