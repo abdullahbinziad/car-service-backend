@@ -1,4 +1,4 @@
-const {query} = require("express");
+const {query, response} = require("express");
 const express = require("express");
 const multer = require("multer");
 const cors = require("cors");
@@ -15,17 +15,7 @@ mongoose.set("strictQuery", true);
 
 
 //file upload
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-      cb(null, 'uploads')
-    },
-    filename: function (req, file, cb) {
-     const name = Date.now()+"-"+ file.originalname ;
-      cb(null, name)
-    }
-  })
-  
-  const upload = multer({ storage: storage })
+
 
 
 //set mongoose connection
@@ -49,10 +39,7 @@ const servicesSchema = new mongoose.Schema({
     require: true,
   },
   description: String,
-  image:{
-    data: Buffer,
-    contentType: String  //if wnat to send message
-  }
+ 
 });
 
 
@@ -81,24 +68,41 @@ app.get('/services', async (req,res)=>{
    }
 });
 
+// getting single data  by Id
+app.get('/services/:id', async (req,res)=>{
+   try {
+
+
+
+    const id = req.params.id;
+    const singleService = {_id: Object(id)};
+    const service= await Service.findOne(singleService);
+    if(service){
+        res.status(201).send(service);
+    
+    }else{
+        res.status(400).send("There was no products");
+    }
+   } catch (error) {
+    res.status(500).send({message: error.message});
+   }
+});
+
 //post service 
-app.post("/services",upload.single('image'), async (req,res) =>{
+app.post("/services", async (req,res) =>{
     try {
         console.log(req.file)
         const newService = new Service({
             title: req.body.title,
             price: req.body.price,
             description:req.body.description,
-            image: {
-               data: fs.readFileSync(path.join(__dirname + '/uploads/' + req.file.filename)),
-            contentType: 'image/png'
-            }
+          
             
         });
         const serviceData = await newService.save();
         res.status(201).send(serviceData);
     } catch (error) {
-        res.status(500).send({message: error.message});
+      res.status(500).send({message: error.message});
     }
 });
 
